@@ -1,53 +1,70 @@
-import React, { Component } from 'react';
-import TodoItem from './components/TodoItem/TodoItem';
-import './App.css';
+import React, { Component } from "react";
+import TodoItem from "./components/TodoItem/TodoItem";
+import "./App.css";
+
+import firebase from "firebase/app";
+import { firebaseConfig } from "./secret.firebase";
+require("firebase/firestore");
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.firestore();
 
 class App extends Component {
   state = {
-    todoList: [
-      {
-        content: 'Meet with Brad',
-        finished: false,
-      },
-      {
-        content: 'Go to Costco',
-        finished: true,
-      },
-      {
-        content: 'Hit the gym',
-        finished: true,
-      },
-      {
-        content: 'Remember to buy milk',
-        finished: false,
-      },
-      {
-        content: 'Finish Homework 6',
-        finished: false,
-      },
-    ],
-    newTodoContent: '',
+    todoList: [],
+    newTodoContent: ""
   };
+
+  componentDidMount() {
+    // set up a listener for the 'todos' collection in Firestore
+    // once there's any changes made to this collection, the listener function will run
+    this.unsubscribeTodos = db.collection("todos").onSnapshot(querySnapshot => {
+      // the listener function will
+      // 1. receive the latest version of the 'todo' collection
+      // 2. loop through all the todo items in the collection
+      // 3. push them in a temporary list stored in memory
+      // 4. update the state with the new todo list
+      let todos = [];
+      querySnapshot.forEach(snapshot => {
+        // each todo item looks like: {content: 'xxxxx', finished: true, id: 3unuq9yt4ndas}
+        todos.push({
+          ...snapshot.data(),
+          id: snapshot.id
+        });
+      });
+      this.setState({ todoList: todos });
+    });
+  }
+
+  componentWillUnmount() {
+    if (this.unsubscribeTodos) {
+      // it's a good practice to unsubscribe the listeners to prevent memory leaks
+      this.unsubscribeTodos();
+    }
+  }
 
   todoContentInputHandler = event => {
     this.setState({
-      newTodoContent: event.target.value,
+      newTodoContent: event.target.value
     });
   };
 
   addItemToList = () => {
-    if (this.state.newTodoContent === '') {
+    if (this.state.newTodoContent === "") {
       return;
     }
+
     let newTodoList = [...this.state.todoList];
     newTodoList.push({
       content: this.state.newTodoContent,
-      finished: false,
+      finished: false
     });
 
     this.setState({
       todoList: newTodoList,
-      newTodoContent: '',
+      newTodoContent: ""
     });
   };
 
@@ -56,7 +73,7 @@ class App extends Component {
     let newTodoList = [...this.state.todoList];
     newTodoList.splice(idx, 1);
     this.setState({
-      todoList: newTodoList,
+      todoList: newTodoList
     });
   };
 
@@ -64,7 +81,7 @@ class App extends Component {
     let newTodoList = [...this.state.todoList];
     newTodoList[idx].finished = !newTodoList[idx].finished;
     this.setState({
-      todoList: newTodoList,
+      todoList: newTodoList
     });
   };
 
@@ -79,7 +96,10 @@ class App extends Component {
             onChange={e => this.todoContentInputHandler(e)}
             placeholder="new to do..."
           />
-          <span onClick={() => this.addItemToList()} className="AddNewToDoButton">
+          <span
+            onClick={() => this.addItemToList()}
+            className="AddNewToDoButton"
+          >
             Add
           </span>
         </div>
