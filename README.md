@@ -1,3 +1,7 @@
+# React Simple Todo List
+
+_(built with React 16.10 in 2019 for SSUI)_
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
