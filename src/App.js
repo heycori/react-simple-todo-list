@@ -56,33 +56,35 @@ class App extends Component {
       return;
     }
 
-    let newTodoList = [...this.state.todoList];
-    newTodoList.push({
+    // add the new todo item to the 'todos' collection in Firestore as a new document.
+    // the add() method will automatically take care of IDing the new document to make
+    // sure it's unqiue within the 'todos' collection
+    db.collection("todos").add({
       content: this.state.newTodoContent,
       finished: false
     });
 
     this.setState({
-      todoList: newTodoList,
       newTodoContent: ""
     });
   };
 
   removeItemFromList = (event, idx) => {
     event.stopPropagation();
-    let newTodoList = [...this.state.todoList];
-    newTodoList.splice(idx, 1);
-    this.setState({
-      todoList: newTodoList
-    });
+
+    // remove the todo with id equals {this.state.todoList[idx].id} from
+    // the 'todos' collection in firestore
+    db.collection("todos")
+      .doc(this.state.todoList[idx].id)
+      .delete();
   };
 
   switchItemCheckedStatus = idx => {
-    let newTodoList = [...this.state.todoList];
-    newTodoList[idx].finished = !newTodoList[idx].finished;
-    this.setState({
-      todoList: newTodoList
-    });
+    db.collection("todos")
+      .doc(this.state.todoList[idx].id)
+      .update({
+        finished: !this.state.todoList[idx].finished
+      });
   };
 
   render() {
